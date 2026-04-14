@@ -1,1 +1,41 @@
+name: Valley Gazette — Publish Articles
 
+on:
+  schedule:
+    # 5 runs per day, spread across the day (UTC times)
+    - cron: "0 8 * * *"    # 8:00 AM UTC  — 1:00 AM Pacific
+    - cron: "0 12 * * *"   # 12:00 PM UTC — 5:00 AM Pacific
+    - cron: "0 16 * * *"   # 4:00 PM UTC  — 9:00 AM Pacific
+    - cron: "0 20 * * *"   # 8:00 PM UTC  — 1:00 PM Pacific
+    - cron: "0 0 * * *"    # Midnight UTC — 5:00 PM Pacific
+
+  # Run manually from the Actions tab whenever you want
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    # Give the action permission to commit files back to the repo
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install google-generativeai feedparser requests
+
+      - name: Run agent
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO:    ${{ github.repository }}
+          UNSPLASH_KEY:   ${{ secrets.UNSPLASH_KEY }}
+        run: python agent/gazette_agent.py
